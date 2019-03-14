@@ -1,0 +1,3 @@
+Press space to continue.
+Press space to continue or backspace to go back.
+When you're ready to begin, press space. Or press backspace to go back.
