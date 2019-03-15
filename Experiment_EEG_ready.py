@@ -19,11 +19,6 @@ GlobalClock = core.Clock()  # Track time since experiment starts
 #port = parallel.ParallelPort(address=0xd050) ################################
 #port.setData(0)
 
-#port.setData(trial['ref']) #Stim starts
-        #core.wait(0.001)
-        #port.setData(0)
-
-
 ################################################
 ############### Basic checks ###################
 ################################################
@@ -60,6 +55,10 @@ logging.console.setLevel(logging.WARNING)
 ################################################
 ################# Variables ####################
 ################################################
+# beats
+binary_boi = sound.Sound(os.path.join('Stimuli', 'Tones', 'binary_beat.wav'))
+ternary_boi = sound.Sound(os.path.join('Stimuli', 'Tones', 'ternary_beat.wav'))
+
 
 # setup window
 mon = monitors.Monitor(name = 'OptiPlex 7440',
@@ -126,9 +125,10 @@ thisPracTrial = prac_list.trialList[0]  # so we can initialise stimuli with some
 
 try: 
     # ==== SETUP TRIAL OBJECTS ==== #
-    message1 = visual.TextStim(win, pos=[0,+3], color=FGC, alignHoriz='center', name='topMsg', text="placeholder") 
+    message1 = visual.TextStim(win, pos=[0,+6], color=FGC, height=.7, alignHoriz='center', name='topMsg', text="placeholder") 
     message2 = visual.TextStim(win, pos=[0,-3], color=FGC, alignHoriz='center', name='bottomMsg', text="placeholder") 
     fixation = visual.TextStim(win,  pos=[0,0], color=FGC, alignHoriz='center', text="+")
+    fixation2 = visual.TextStim(win,  pos=[0,0], color='black', height=1.05, alignHoriz='center', text="+")
     endMessage = visual.TextStim(win,  pos=[0,0], color=FGC, alignHoriz='center', text="The end! Thank you for participating :)")
     space_cont = visual.TextStim(win, pos=[0,0], color=FGC, text="Press space to continue")
     too_slow = visual.TextStim(win, pos=[0,0], color=FGC, text="Too slow: respond quicker next time")
@@ -148,8 +148,6 @@ try:
 
     test_text = visual.TextStim(win, pos=[0,0], color=FGC, text="Fuck off")
 
-
-
     # ==== OTHER TRIAL VARIABLES ==== #
     clock = core.Clock()
 
@@ -165,8 +163,8 @@ try:
                         'Probe_clause\t' + 
                         'Response\t' + 
                         'Accuracy\t' + 
-                        'RT' +
-                        'Catch_response' +
+                        'RT\t' +
+                        'Catch_response\t' +
                         'Catch Accuracy' + '\n')
     log_file.close()
 
@@ -175,18 +173,23 @@ try:
     ################################################
     
     win.mouseVisible = False
-
     """
     # ===== PRACTISE TRIALS INTRO ====== #
     counter = 0
-    while counter < len(part2Intro):
+    while counter < len(part1Intro):
         # === set top text === #
-        message1.setText(part2Intro[counter]) 
+        message1.setText(part1Intro[counter]) 
         # === set bottom text === #
         if counter == 0:
             message2.setText(bottom_text[0])
-        elif counter in range(1, (len(part2Intro) - 1)):
+        elif counter in range(1, (len(part1Intro) - 1)):
             message2.setText(bottom_text[1])
+            if counter == 1:
+                thisKey = event.waitKeys()
+                if thisKey[0] in ['b']:
+                    binary_boi.play()
+                elif thisKey[0] in ['t']:
+                    ternary_boi.play()
         else: 
             message2.setText(bottom_text[2])
         # === display instructions and wait === #
@@ -200,7 +203,7 @@ try:
             core.quit()
         elif thisKey[0] == 'backspace' and counter > 0:
             counter -= 1
-        else:
+        elif thisKey[0] == 'space':
             counter += 1
 
     # ===== PRACTICE TRIALS ====== #
@@ -269,6 +272,8 @@ try:
         audio_stim.stop()  # ensure sound has stopped at end of routine
         fixation.setAutoDraw(False)
 
+        core.wait(probe_delay)
+
         ####====Probe====####
         # 3.  display probe text e.g. "The boy helped the girl?" #####
         probe_text.tStart = t
@@ -289,12 +294,12 @@ try:
                 probe_resp.keys = theseKeys[-1]  # just the last key pressed
                 probe_resp.rt = probe_resp.clock.getTime()
                 # was this 'correct'?
-                if probe_resp.keys == 'n' and (trial_num == 1 or trial_num == 2):
+                if probe_resp.keys == 'n' and (trial_num == 1 or trial_num == 2 or trial_num == 6):
                     probe_resp.corr = 1
                     feedback.setText("correct")
                     feedback.draw()
                     thing = False
-                elif probe_resp.keys == 'y' and (trial_num == 3 or trial_num == 4):
+                elif probe_resp.keys == 'y' and (trial_num == 3 or trial_num == 4 or trial_num == 5):
                     probe_resp.corr = 1
                     feedback.setText("correct")
                     feedback.draw()
@@ -316,7 +321,7 @@ try:
         if probe_resp.rt > probe_duration:
             too_slow.draw()
             win.flip()
-            core.wait(2) 
+            core.wait(1) 
         
         ####====Space to continue====####
         event.clearEvents(eventType='keyboard')
@@ -326,7 +331,7 @@ try:
         while not 'space' in thisKey:
             thisKey = event.waitKeys(keyList=['space'])
         core.wait(1)
-    """
+    
     # ===== INSTRUCTIONS 2 ====== #
     counter = 0
     while counter < len(part3Intro):
@@ -350,7 +355,7 @@ try:
             counter -= 1
         else:
             counter += 1
-    
+    """
     trial_num = 0 # initialise trial number
 
     #port.setData('G0') # start of trials marker
@@ -385,6 +390,13 @@ try:
         # add auditory stimuli component
         audio_stim = sound.Sound( str(os.path.join('Stimuli', 'Audio', (extraction + '_' + congruency), ('sent' + str(sent_number + 1) + '.wav'))) ) 
 
+        if beat_type == 'binary':
+            meter_ITI = 2 * beat_freq
+        elif beat_type == 'ternary':
+            meter_ITI = 3 * beat_freq
+        else:
+            meter_ITI = 15 * beat_freq
+
         trialComponents.extend([audio_stim],) # add beat stim to trialComponents list
         # set probe text for the trial
         probe_text.setText(probe)
@@ -395,6 +407,10 @@ try:
         for thisComponent in trialComponents:
             if hasattr(thisComponent, 'status'):
                 thisComponent.status = NOT_STARTED
+        
+        win.flip()
+        core.wait(.7)
+
         t = 0
         frameN = -1
         sent_marker = True
@@ -414,13 +430,18 @@ try:
                 audio_stim.frameNStart = frameN  # exact frame index
                 audio_stim.play()  # start the sound (it finishes automatically)
                 fixation.setAutoDraw(True)
+            
+            if beat_type != 'nonaccent':
+                if 0 <= (t - (audio_stim.tStart + sound_delay)) % meter_ITI <= .1:
+                    fixation2.draw() # i.e. this will be shown for 1 screen refresh (~.066 seconds)
+
 
             # EEG marker for sentence start
             if (t - (audio_stim.tStart + sound_delay)) >= sent_offset*beat_freq and sent_marker:
                 #port.setData('G1') # start of tones marker + trial ref
                 #core.wait(.0001)
                 #port.setData(0)
-                print(t)
+                #print(t)
                 #test_text.setAutoDraw(True)
                 sent_marker = False
 

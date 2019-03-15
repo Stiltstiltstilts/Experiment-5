@@ -18,12 +18,13 @@ TEXTSIZE = 42 #text size for stim (not instructions)
 TEXTCORDS = (0, 0) #Centre of screen
 beat_freq = .4  #1/2.5 
 frameInterval = 0.0166667 #framerate.... CHECK THIS
-sound_delay = .08 # 0.003 for processing command + .102 for soundcard/driver processing and sound coming out of earphones
+sound_delay = -.05 # 0.003 for processing command + .102 for soundcard/driver processing and sound coming out of earphones
+# for EEG delivery computer: 0.003 for processing command + .102 for soundcard/driver processing and sound coming out of earphones
 trial_duration = 10 # seconds
 probe_duration = 5 # seconds
 n_tap_trials = 6
 
-probe_delay = 1
+probe_delay = .8
 
 _thisDir = os.path.abspath(os.path.dirname(__file__)) #change to local directory
 os.chdir(_thisDir)
@@ -70,14 +71,3 @@ gsi_part2_scales = [['0','1', '2', '3', '4-5', '6-9', '10+'],
                     ['0', '0.5', '1', '2', '3-5', '6-9', '10+'], 
                     ['0', '1', '2', '3', '4', '5', '6+'],
                     ['0-15mins', '15-30mins', '30-60mins', '60-90mins', '2hrs', '2-3hrs', '4+hours']]
-
-
-###===EEG MARKERS===###
-# General markers
-start_of_trials = 'G0'
-start_of_sentence = 'G1'
-end_of_sentence = 'G2'
-
-
-
-
