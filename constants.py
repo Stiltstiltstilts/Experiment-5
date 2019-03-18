@@ -24,6 +24,9 @@ trial_duration = 10 # seconds
 probe_duration = 5 # seconds
 n_tap_trials = 6
 
+break_frequency = 50 # trials
+break_duration = 15 # seconds
+
 probe_delay = .8
 
 _thisDir = os.path.abspath(os.path.dirname(__file__)) #change to local directory

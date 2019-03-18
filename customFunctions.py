@@ -203,15 +203,16 @@ def trialCreator(condition_list, probe_condition_list):
                 trial['trial_ref'] = 'T24'
         
         # Fix pos_neg stuff
-        if trial['pos_neg'] == 'subneg_objpos' and trial['extraction'] == 'subject':
-            trial['pos_neg'] = 'negative'
-        elif trial['pos_neg'] == 'subneg_objpos' and trial['extraction'] == 'object':
-            trial['pos_neg'] = 'positive'
-        elif trial['pos_neg'] == 'subpos_objneg' and trial['extraction'] == 'subject':
-            trial['pos_neg'] = 'positive'
-        elif trial['pos_neg'] == 'subpos_objneg' and trial['extraction'] == 'object':
-            trial['pos_neg'] = 'negative'
-        
+        if trial['pos_neg'] == 'subneg_objpos':
+            if trial['extraction'] == 'subject':
+                trial['pos_neg'] = 'negative'
+            elif trial['extraction'] == 'object':
+                trial['pos_neg'] = 'positive'
+        elif trial['pos_neg'] == 'subpos_objneg':
+            if trial['extraction'] == 'subject':
+                trial['pos_neg'] = 'positive'
+            elif trial['extraction'] == 'object':
+                trial['pos_neg'] = 'negative'
 
         # Create probe markers
         if trial['pos_neg'] == 'positive':
