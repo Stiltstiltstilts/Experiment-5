@@ -132,7 +132,6 @@ try:
     endMessage = visual.TextStim(win,  pos=[0,0], color=FGC, alignHoriz='center', text="The end! Thank you for participating :)")
     space_cont = visual.TextStim(win, pos=[0,0], color=FGC, text="Press space to continue")
     too_slow = visual.TextStim(win, pos=[0,0], color=FGC, text="Too slow: respond quicker next time")
-    check_text = visual.TextStim(win, pos=[0,0], color=FGC, text="What beat did the last word end on?")
     feedback = visual.TextStim(win, pos=[0,0], color=FGC, text="placeholder")
     introText = visual.TextStim(win, pos=[0,0], color=FGC, text="Placeholder")
     probe_text = visual.TextStim(win, pos=[0,0], color=FGC, alignHoriz='center', name='top_probe', text="placeholder")
@@ -146,7 +145,11 @@ try:
     response_keys = visual.TextStim(win, pos=[0,-5], height = .5, color=FGC, text="respond:'y' 'n' or 'd'")
     response_keys_check = visual.TextStim(win, pos=[0,-5], height = .5, color=FGC, text="respond:'1', '2', or '3'")
 
-    test_text = visual.TextStim(win, pos=[0,0], color=FGC, text="Fuck off")
+    break_text = visual.TextStim(win, pos=[0,0], color=FGC, text="Take a break and stretch for 15 seconds!")
+
+    inst_image = visual.ImageStim(win, pos = [0,+1],)
+    beat_indicator = visual.ImageStim(win, pos = [0,0])
+    no_meter = visual.TextStim(win,  pos=[0,0], color=FGC, alignHoriz='center', text="(no meter)")
 
     # ==== OTHER TRIAL VARIABLES ==== #
     clock = core.Clock()
@@ -163,9 +166,7 @@ try:
                         'Probe_clause\t' + 
                         'Response\t' + 
                         'Accuracy\t' + 
-                        'RT\t' +
-                        'Catch_response\t' +
-                        'Catch Accuracy' + '\n')
+                        'RT\t' + '\n')
     log_file.close()
 
     ################################################
@@ -173,7 +174,7 @@ try:
     ################################################
     
     win.mouseVisible = False
-    """
+    
     # ===== PRACTISE TRIALS INTRO ====== #
     counter = 0
     while counter < len(part1Intro):
@@ -190,6 +191,20 @@ try:
                     binary_boi.play()
                 elif thisKey[0] in ['t']:
                     ternary_boi.play()
+            if counter == 2:
+                inst_image.setImage(os.path.join('Stimuli', 'Instructions', 'sub_incong.png'))
+                inst_image.size = [10,4]
+                inst_image.draw()
+            if counter == 4:
+                inst_image.setImage(os.path.join('Stimuli', 'Instructions', 'sub_congs.png'))
+                inst_image.size = [25,15]
+                inst_image.pos = [0,-4]
+                inst_image.draw()
+            if counter == 5:
+                inst_image.setImage(os.path.join('Stimuli', 'Instructions', 'obj_congs.png'))
+                inst_image.size = [25,15]
+                inst_image.pos = [0,-4]
+                inst_image.draw()
         else: 
             message2.setText(bottom_text[2])
         # === display instructions and wait === #
@@ -334,11 +349,11 @@ try:
     
     # ===== INSTRUCTIONS 2 ====== #
     counter = 0
-    while counter < len(part3Intro):
-        message1.setText(part3Intro[counter])
+    while counter < len(part2Intro):
+        message1.setText(part2Intro[counter])
         if counter == 0:
             message2.setText(bottom_text[0])
-        elif counter in range(1, (len(part3Intro) - 1)):
+        elif counter in range(1, (len(part2Intro) - 1)):
             message2.setText(bottom_text[1])
         else: 
             message2.setText(bottom_text[2])
@@ -355,7 +370,7 @@ try:
             counter -= 1
         else:
             counter += 1
-    """
+    
     trial_num = 0 # initialise trial number
 
     #port.setData('G0') # start of trials marker
@@ -371,6 +386,12 @@ try:
             for paramName in thisTrial:
                 exec('{} = thisTrial[paramName]'.format(paramName))
 
+        # Check for break trial
+        if trial_num % break_frequency == 0:
+            break_text.draw()
+            win.flip()
+            core.wait(break_duration)
+
         probe_resp = event.BuilderKeyResponse() # initialising
         check_resp = event.BuilderKeyResponse() # initialising
 
@@ -382,7 +403,6 @@ try:
             check_resp.corr = 'NA'
             check_resp.keys = 'NA'
         
-
         ####====SETUP TRIAL COMPONENTS LIST====####
         # initialize trial components list
         trialComponents = []
@@ -394,8 +414,6 @@ try:
             meter_ITI = 2 * beat_freq
         elif beat_type == 'ternary':
             meter_ITI = 3 * beat_freq
-        else:
-            meter_ITI = 15 * beat_freq
 
         trialComponents.extend([audio_stim],) # add beat stim to trialComponents list
         # set probe text for the trial
@@ -408,8 +426,14 @@ try:
             if hasattr(thisComponent, 'status'):
                 thisComponent.status = NOT_STARTED
         
+        if congruency != 'neutral':
+            beat_indicator_path = os.path.join('Stimuli', 'Instructions', 'beat_ind', beat_type + '_' + congruency + '.png')
+            beat_indicator.setImage(beat_indicator_path)
+            beat_indicator.draw()
+        else:
+            no_meter.draw()
         win.flip()
-        core.wait(.7)
+        core.wait(1)
 
         t = 0
         frameN = -1
@@ -540,28 +564,6 @@ try:
             too_slow.draw()
             win.flip()
             core.wait(2) 
-        
-        ####====Catch trial prompt====####
-        while check_trial:
-            win.flip()
-            check_text.setAutoDraw(True)
-            response_keys_check.setAutoDraw(True)
-            theseKeys = event.getKeys(keyList=['1', '2', '3'])
-            if len(theseKeys) > 0: 
-                check_text.setAutoDraw(False)
-                response_keys_check.setAutoDraw(False)
-                check_resp.keys = theseKeys[-1]
-                if check_resp.keys == check_beat:
-                    check_resp.corr = 1
-                    feedback.setText("correct")
-                    feedback.draw()
-                    check_trial = False
-                elif check_resp.keys != check_beat:
-                    check_resp.corr = 0
-                    feedback.setText("incorrect")
-                    feedback.draw()
-                    check_trial = False
-        win.flip()
 
         with open('data/{}trial_log.txt'.format(expInfo['participant']), 'a') as log_file: 
             log_file.write('\t'.join([str(trial_num),
@@ -573,9 +575,7 @@ try:
                 str(clause),
                 str(probe_resp.keys),
                 str(probe_resp.corr),
-                str(probe_resp.rt),
-                str(check_resp.keys),
-                str(check_resp.corr)]) + '\n')
+                str(probe_resp.rt)]) + '\n')
             log_file.close()
         core.wait(.8)
         
